@@ -1,11 +1,17 @@
 "use client";
-import React from "react";
+import React, { useContext } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button"; // Ensure this path is correct
 import { useGoogleLogin } from "@react-oauth/google";
 import { GetAuthUserData } from "@/services/GlobalApi";
+import { useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { AuthContext } from "@/context/AuthContext";
 
 function SignIn() {
+  const createUser = useMutation(api.users.createUser);
+  const { user, setUser } = useContext(AuthContext);
+
   const googleLogin = useGoogleLogin({
     flow: "implicit", // Ensures popup-based login
     onSuccess: async (tokenResponse) => {
@@ -15,11 +21,24 @@ function SignIn() {
         localStorage.setItem("user_token", tokenResponse.access_token);
       }
 
+      let fetchedUser: any = null; // ✅ Correctly declare user
+
       try {
-        const user = await GetAuthUserData(tokenResponse.access_token);
-        console.log("User Data:", user);
+        fetchedUser = await GetAuthUserData(tokenResponse.access_token); // ✅ Assign value correctly
       } catch (error) {
         console.error("Error fetching user info:", error as Error);
+      }
+
+      if (fetchedUser) { // ✅ Check `fetchedUser`, not `user`
+        const result = await createUser({
+          name: fetchedUser.name,
+          email: fetchedUser.email,
+          picture: fetchedUser.picture,
+        });
+
+        setUser(result);
+      } else {
+        console.error("User data is undefined or null.");
       }
     },
     onError: (errorResponse) => console.error("Login Error:", errorResponse),
@@ -48,4 +67,3 @@ function SignIn() {
 }
 
 export default SignIn;
-
