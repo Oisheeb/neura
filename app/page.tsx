@@ -5,7 +5,7 @@ export default function Home() {
     <div>
       <h2>Neura</h2>
       <Button className="!h-[45px] !px-[30px] !py-[20px] !text-[1rem]">
-        Try Neura</Button>
+        Try Neura!</Button>
 
     </div>
   );
